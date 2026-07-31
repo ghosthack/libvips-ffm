@@ -146,7 +146,7 @@ git -C "$VCPKG_ROOT" config core.autocrlf false
 git -C "$VCPKG_ROOT" config core.eol lf
 git -C "$VCPKG_ROOT" checkout --force "$VCPKG_COMMIT" -- \
   ports/libheif/portfile.cmake ports/libheif/vcpkg.json
-git -C "$VCPKG_ROOT" apply \
+git -C "$VCPKG_ROOT" apply --ignore-space-change --ignore-whitespace \
   "$ROOT/build-natives/vcpkg/libheif-dav1d.patch"
 if [ "$PLATFORM" = windows-x64 ]; then
   if [ ! -x "$VCPKG_ROOT/vcpkg.exe" ]; then
