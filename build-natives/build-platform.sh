@@ -237,7 +237,19 @@ rustc --version | grep -Fq "rustc $RUST_VERSION " ||
   { echo "failed to activate Rust $RUST_VERSION" >&2; exit 1; }
 
 if ! command -v cargo-cbuild >/dev/null 2>&1; then
-  cargo install cargo-c --version "$CARGO_C_VERSION" --locked
+  if [ "$PLATFORM" = windows-x64 ]; then
+    # cargo.exe is a native Windows process. Give its cc-rs compiler children
+    # a native PATH so MinGW's runtime DLLs remain visible when gcc.exe starts.
+    # Keep this local to the bootstrap; Meson and the remaining shell commands
+    # still require the POSIX PATH assembled above.
+    RUST_CARGO_HOME_MIXED="$(cygpath -m "$RUST_CARGO_HOME")"
+    RUST_TOOLCHAIN_BIN_MIXED="$(cygpath -m "$RUST_TOOLCHAIN_BIN")"
+    CARGO_NATIVE_PATH="$RUST_CARGO_HOME_MIXED/bin;$RUST_TOOLCHAIN_BIN_MIXED;$LIBVIPS_FFM_MINGW_BIN;C:\\Windows\\System32;C:\\Windows"
+    PATH="$CARGO_NATIVE_PATH" "$RUST_CARGO_HOME/bin/cargo.exe" \
+      install cargo-c --version "$CARGO_C_VERSION" --locked
+  else
+    cargo install cargo-c --version "$CARGO_C_VERSION" --locked
+  fi
 fi
 if ! cargo-cbuild --version | grep -Fq "$CARGO_C_VERSION"; then
   echo "cargo-c $CARGO_C_VERSION is required" >&2
