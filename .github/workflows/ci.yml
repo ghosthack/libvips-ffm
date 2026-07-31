@@ -79,8 +79,6 @@ jobs:
 
   windows-x64:
     runs-on: windows-2025
-    env:
-      VCPKG_DEFAULT_BINARY_CACHE: ${{ runner.temp }}/vcpkg-binary-cache
     defaults:
       run:
         shell: msys2 {0}
@@ -106,12 +104,15 @@ jobs:
             mingw-w64-x86_64-pkgconf
             mingw-w64-x86_64-python
             mingw-w64-x86_64-tools
+      - name: Prepare vcpkg binary cache
+        run: |
+          cache_path="$(cygpath -m "$RUNNER_TEMP")/vcpkg-binary-cache"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$cache_path" >> "$GITHUB_ENV"
+          mkdir -p "$(cygpath -u "$cache_path")"
       - uses: actions/cache@v4
         with:
-          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          path: ${{ runner.temp }}/vcpkg-binary-cache
           key: windows-vcpkg-${{ hashFiles('build-natives/versions.env', 'build-natives/vcpkg/**', 'build-natives/triplets/**') }}
-      - name: Prepare vcpkg binary cache
-        run: mkdir -p "$(cygpath -u "$VCPKG_DEFAULT_BINARY_CACHE")"
       - name: Build PDFium from source
         run: ./build-natives/build-pdfium.sh windows-x64
         shell: bash
