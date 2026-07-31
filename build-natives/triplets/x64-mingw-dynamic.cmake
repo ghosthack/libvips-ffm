@@ -1,6 +1,9 @@
 set(VCPKG_TARGET_ARCHITECTURE x64)
 set(VCPKG_CRT_LINKAGE dynamic)
 set(VCPKG_LIBRARY_LINKAGE dynamic)
+# Compiler subprocesses need the MinGW runtime DLL directory. This mirrors
+# vcpkg's maintained MinGW triplets and preserves PATH across build phases.
+set(VCPKG_ENV_PASSTHROUGH PATH)
 # vcpkg sanitizes build environments. Preserve the runtime-discovered MSYS2
 # compiler location without making its runner-specific absolute path part of
 # package ABI hashes; compiler identity is hashed separately.
