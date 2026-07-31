@@ -91,6 +91,7 @@ case "$PLATFORM" in
       exit 1
     fi
     MINGW_BIN_POSIX="${MINGW_GCC_PATH%/*}"
+    MINGW_PREFIX_POSIX="${MINGW_BIN_POSIX%/bin}"
     MINGW_BIN_MIXED="$(cygpath -m "$MINGW_BIN_POSIX")"
     export LIBVIPS_FFM_MINGW_BIN="$MINGW_BIN_MIXED"
     # These variables also reach native Windows CMake processes, so use paths
@@ -217,6 +218,14 @@ else
 fi
 
 VCPKG_PREFIX="$VCPKG_INSTALLED/$TRIPLET"
+
+if [ "$PLATFORM" = windows-x64 ]; then
+  # Meson is a native Windows Python process in MINGW64. Route every compiler
+  # invocation through the same wrappers used by vcpkg so cc1.exe and linker
+  # subprocesses always inherit the MinGW runtime DLL directory.
+  export CC="$(cygpath -m "$TRIPLET_DIR/mingw-gcc.cmd")"
+  export CXX="$(cygpath -m "$TRIPLET_DIR/mingw-gxx.cmd")"
+fi
 
 # Bootstrap Rust build tools before adding target libraries to PATH and
 # PKG_CONFIG_PATH. Otherwise cargo-c itself can accidentally link against the
@@ -489,7 +498,7 @@ if [ "$PLATFORM" = windows-x64 ]; then
   # MinGW-built C++ and Rust libraries depend on these toolchain runtimes.
   # They are not vcpkg ports, so stage the exact DLLs used by this compiler.
   for runtime in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
-    runtime_path="/mingw64/bin/$runtime"
+    runtime_path="$MINGW_BIN_POSIX/$runtime"
     [ -f "$runtime_path" ] ||
       { echo "missing MinGW runtime $runtime" >&2; exit 1; }
     cp "$runtime_path" "$PREFIX/bin/"
@@ -530,8 +539,8 @@ python3 "$ROOT/build-natives/collect-rust-licenses.py" \
 if [ "$PLATFORM" = windows-x64 ]; then
   mkdir -p "$DEST/licenses/mingw-runtime"
   for component in gcc-libs libwinpthread winpthreads; do
-    if [ -d "/mingw64/share/licenses/$component" ]; then
-      cp -R "/mingw64/share/licenses/$component" \
+    if [ -d "$MINGW_PREFIX_POSIX/share/licenses/$component" ]; then
+      cp -R "$MINGW_PREFIX_POSIX/share/licenses/$component" \
         "$DEST/licenses/mingw-runtime/"
     fi
   done
