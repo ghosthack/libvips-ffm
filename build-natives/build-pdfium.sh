@@ -34,11 +34,21 @@ case "$PLATFORM" in
     # our controlled value.
     unset WindowsSdkDir WindowsSdkBinPath WindowsSdkVerBinPath \
       WindowsSDKVersion UniversalCRTSdkDir
+    WINDOWS_SDK_BIN_ROOT='/c/Program Files (x86)/Windows Kits/10/bin'
+    WINDOWS_SDK_RC="$({
+      find "$WINDOWS_SDK_BIN_ROOT" -mindepth 3 -maxdepth 3 \
+        -type f -iname rc.exe -path '*/x64/rc.exe' -print 2>/dev/null || true
+    } | sort -V | tail -n 1)"
+    if [ -z "$WINDOWS_SDK_RC" ]; then
+      echo "Windows SDK x64 rc.exe not found under $WINDOWS_SDK_BIN_ROOT" >&2
+      exit 1
+    fi
     # Chromium's 2022 probe checks Program Files, while the standalone Build
     # Tools installer uses Program Files (x86) on our builders.
     PDFIUM_PLATFORM_ENV=(
       "vs2022_install=C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools"
       "WINDOWSSDKDIR=C:\\Program Files (x86)\\Windows Kits\\10"
+      "PATH=$(dirname "$WINDOWS_SDK_RC"):$PATH"
     )
     ;;
   *) echo "unsupported platform: $PLATFORM" >&2; exit 2 ;;
