@@ -189,6 +189,12 @@ if ! command -v rustup >/dev/null 2>&1; then
 fi
 rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
 export RUSTUP_TOOLCHAIN="$RUST_TOOLCHAIN"
+RUSTC_PATH="$(rustup which --toolchain "$RUST_TOOLCHAIN" rustc)"
+if [ "$PLATFORM" = windows-x64 ]; then
+  RUSTC_PATH="$(cygpath -u "$RUSTC_PATH")"
+fi
+RUST_TOOLCHAIN_BIN="${RUSTC_PATH%/*}"
+export PATH="$RUST_CARGO_HOME/bin:$RUST_TOOLCHAIN_BIN:$PATH"
 rustc --version | grep -Fq "rustc $RUST_VERSION " ||
   { echo "failed to activate Rust $RUST_VERSION" >&2; exit 1; }
 

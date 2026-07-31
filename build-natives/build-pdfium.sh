@@ -43,13 +43,18 @@ case "$PLATFORM" in
       echo "Windows SDK x64 rc.exe not found under $WINDOWS_SDK_BIN_ROOT" >&2
       exit 1
     fi
-    # Chromium's 2022 probe checks Program Files, while the standalone Build
-    # Tools installer uses Program Files (x86) on our builders.
     PDFIUM_PLATFORM_ENV=(
-      "vs2022_install=C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools"
       "WINDOWSSDKDIR=C:\\Program Files (x86)\\Windows Kits\\10"
       "PATH=$(dirname "$WINDOWS_SDK_RC"):$PATH"
     )
+    # Keep compatibility with the standalone VS 2022 Build Tools used by the
+    # development builders, but do not point Chromium at a nonexistent install
+    # on hosted images that have moved to a newer Visual Studio.
+    if [ -d '/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools' ]; then
+      PDFIUM_PLATFORM_ENV+=(
+        "vs2022_install=C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools"
+      )
+    fi
     ;;
   *) echo "unsupported platform: $PLATFORM" >&2; exit 2 ;;
 esac
@@ -76,6 +81,18 @@ sed -i.bak \
   's|gclient sync -r "origin/${PDFium_BRANCH:-main}" --no-history --shallow|gclient sync -r "'"$PDFIUM_REVISION"'" --no-history --shallow|' \
   "$BUILDER/steps/02-checkout.sh"
 rm -f "$BUILDER/steps/02-checkout.sh.bak"
+
+# The pinned helper's example test requests VS 2022. Newer hosted Windows
+# images may provide only VS 2026 even though Chromium itself detects and uses
+# it successfully, so update the test generator when that is the installed
+# toolchain.
+if [ "$PLATFORM" = "windows-x64" ] &&
+   [ -d '/c/Program Files/Microsoft Visual Studio/18' ]; then
+  sed -i.bak \
+    's/Visual Studio 17 2022/Visual Studio 18 2026/g' \
+    "$BUILDER/steps/09-test.sh"
+  rm -f "$BUILDER/steps/09-test.sh.bak"
+fi
 
 (
   cd "$BUILDER"
