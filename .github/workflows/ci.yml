@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to verify
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  macos-arm64:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 26
+          cache: maven
+      - name: Install native build tools
+        run: brew install autoconf automake autoconf-archive cmake gettext libtool meson ninja pkg-config
+      - name: Build PDFium from source
+        run: ./build-natives/build-pdfium.sh macos-arm64
+      - name: Build native closure from source
+        run: ./build-natives/macos-arm64.sh
+      - name: Build and test
+        run: ./mvnw -B clean verify
+      - name: Verify JPMS consumer
+        run: ./integration-tests/verify-jpms.sh macos-arm64
+      - uses: actions/upload-artifact@v6
+        with:
+          name: natives-macos-arm64
+          path: natives/src/main/resources/libvips-natives/macos-arm64/
+          if-no-files-found: error
+
+  linux-x64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 26
+          cache: maven
+      - name: Install native build tools
+        run: >-
+          sudo apt-get update &&
+          sudo apt-get install -y
+          autoconf automake autoconf-archive build-essential cmake curl
+          gettext git libtool meson nasm ninja-build patchelf pkg-config
+          python3 python3-jinja2 python3-setuptools tar unzip zip
+      - name: Build PDFium from source
+        run: ./build-natives/build-pdfium.sh linux-x64
+      - name: Build native closure from source
+        run: ./build-natives/linux-x64.sh
+      - name: Build and test
+        run: ./mvnw -B clean verify
+      - name: Verify JPMS consumer
+        run: ./integration-tests/verify-jpms.sh linux-x64
+      - uses: actions/upload-artifact@v6
+        with:
+          name: natives-linux-x64
+          path: natives/src/main/resources/libvips-natives/linux-x64/
+          if-no-files-found: error
+
+  windows-x64:
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 26
+          cache: maven
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel git curl tar unzip zip
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-meson
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-tools
+      - name: Build PDFium from source
+        run: ./build-natives/build-pdfium.sh windows-x64
+        shell: bash
+      - name: Build native closure from source
+        run: ./build-natives/windows-x64.sh
+      - name: Build and test
+        run: ./mvnw -B clean verify
+      - name: Verify JPMS consumer
+        run: ./integration-tests/verify-jpms.sh windows-x64
+      - uses: actions/upload-artifact@v6
+        with:
+          name: natives-windows-x64
+          path: natives/src/main/resources/libvips-natives/windows-x64/
+          if-no-files-found: error

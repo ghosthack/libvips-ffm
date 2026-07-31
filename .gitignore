@@ -1,0 +1,23 @@
+/build/
+/target/
+/*/target/
+/integration-tests/target/
+/natives/src/main/resources/libvips-natives/
+__pycache__/
+*.py[cod]
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Local credentials and signing material must never enter source control.
+.env
+.env.*
+!.env.example
+settings.xml
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore

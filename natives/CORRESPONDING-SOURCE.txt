@@ -1,0 +1,22 @@
+Corresponding source for native classifier artifacts
+====================================================
+
+All distributed native libraries are built from source by the scripts under
+build-natives/. The source and build-tool pins are in:
+
+  build-natives/versions.env
+  build-natives/vcpkg/vcpkg.json
+  build-natives/triplets/
+
+Primary source locations:
+
+  libvips: https://github.com/libvips/libvips/releases/tag/v8.18.3
+  PDFium: https://pdfium.googlesource.com/pdfium/+/80fccd7553e5cff9cea6549bc0db2ea93ea6cb2e
+  vcpkg ports: https://github.com/microsoft/vcpkg/tree/3c5d90a305ff00ca841f085a74a7ce74ee777dee
+  librsvg: https://download.gnome.org/sources/librsvg/2.62/
+
+Each generated classifier directory contains its exact VCPKG-COMPONENTS.txt,
+BUILD-INFO.txt, source URLs, build-script commits, licenses, and hashes.
+
+The shared libraries are dynamically linked and replaceable by setting
+LIBVIPS_FFM_LIBDIR or -Dlibvipsffm.libdir to a compatible runtime closure.

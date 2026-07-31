@@ -1,0 +1,49 @@
+diff --git a/ports/libheif/portfile.cmake b/ports/libheif/portfile.cmake
+index 66b7e70d6..31f530c3d 100644
+--- a/ports/libheif/portfile.cmake
++++ b/ports/libheif/portfile.cmake
+@@ -16,6 +16,8 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+         aom         WITH_AOM_DECODER
+         aom         WITH_AOM_ENCODER
+         aom         VCPKG_LOCK_FIND_PACKAGE_AOM
++        dav1d       WITH_DAV1D
++        dav1d       VCPKG_LOCK_FIND_PACKAGE_DAV1D
+         gdk-pixbuf  WITH_GDK_PIXBUF
+         hevc        WITH_X265
+         hevc        VCPKG_LOCK_FIND_PACKAGE_X265
+@@ -42,7 +44,8 @@ vcpkg_cmake_configure(
+         -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF
+         "-DCMAKE_PROJECT_INCLUDE=${CURRENT_PORT_DIR}/cmake-project-include.cmake"
+         -DPLUGIN_DIRECTORY=  # empty
+-        -DWITH_DAV1D=OFF
++        -DENABLE_PLUGIN_LOADING=OFF
++        -DWITH_DAV1D_PLUGIN=OFF
+         -DWITH_EXAMPLES=OFF
+         -DWITH_LIBSHARPYUV=OFF
+         -DWITH_OpenH264_DECODER=OFF
+@@ -57,6 +58,7 @@ vcpkg_cmake_configure(
+     MAYBE_UNUSED_VARIABLES
+         VCPKG_LOCK_FIND_PACKAGE_AOM
+         VCPKG_LOCK_FIND_PACKAGE_Brotli
++        VCPKG_LOCK_FIND_PACKAGE_DAV1D
+         VCPKG_LOCK_FIND_PACKAGE_OpenJPEG
+         VCPKG_LOCK_FIND_PACKAGE_X265
+         VCPKG_LOCK_FIND_PACKAGE_ZLIB
+diff --git a/ports/libheif/vcpkg.json b/ports/libheif/vcpkg.json
+index 1851c04ab..3311f67af 100644
+--- a/ports/libheif/vcpkg.json
++++ b/ports/libheif/vcpkg.json
+@@ -24,6 +24,13 @@
+         "aom"
+       ]
+     },
++    "dav1d": {
++      "description": "AVIF decoding via dav1d",
++      "license": "BSD-2-Clause",
++      "dependencies": [
++        "dav1d"
++      ]
++    },
+     "gdk-pixbuf": {
+       "description": "Plugin for gdk-pixbuf",
+       "supports": "!windows | mingw",

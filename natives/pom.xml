@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.ghosthack</groupId>
+    <artifactId>libvips-ffm-parent</artifactId>
+    <version>8.18.3-0.1.0</version>
+  </parent>
+
+  <artifactId>libvips-ffm-natives</artifactId>
+  <packaging>pom</packaging>
+
+  <name>libvips-ffm natives</name>
+  <description>Self-contained libvips shared library, one classifier jar per supported platform</description>
+
+  <licenses>
+    <license>
+      <name>GNU Lesser General Public License v2.1 or later</name>
+      <url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html</url>
+      <distribution>repo</distribution>
+      <comments>libvips and librsvg. The dynamically linked native closure contains additional open-source licenses documented in every classifier jar.</comments>
+    </license>
+    <license>
+      <name>GNU Lesser General Public License v3.0 only</name>
+      <url>https://www.gnu.org/licenses/lgpl-3.0.html</url>
+      <distribution>repo</distribution>
+      <comments>libheif. All remaining component licenses and notices are documented in every classifier jar.</comments>
+    </license>
+  </licenses>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>libvips.ffm.natives</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>current-platform-native</id>
+            <phase>package</phase>
+            <goals><goal>jar</goal></goals>
+            <configuration>
+              <classesDirectory>src/main/resources</classesDirectory>
+              <classifier>${native.classifier}</classifier>
+              <includes>
+                <include>libvips-natives/${native.classifier}/**</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>all-natives</id>
+      <properties><native.classifier>macos-arm64</native.classifier></properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>windows-x64-native</id>
+                <phase>package</phase>
+                <goals><goal>jar</goal></goals>
+                <configuration>
+                  <classesDirectory>src/main/resources</classesDirectory>
+                  <classifier>windows-x64</classifier>
+                  <includes><include>libvips-natives/windows-x64/**</include></includes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>linux-x64-native</id>
+                <phase>package</phase>
+                <goals><goal>jar</goal></goals>
+                <configuration>
+                  <classesDirectory>src/main/resources</classesDirectory>
+                  <classifier>linux-x64</classifier>
+                  <includes><include>libvips-natives/linux-x64/**</include></includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

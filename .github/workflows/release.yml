@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-central-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event.release.prerelease == false
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 26
+          cache: maven
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="$(./mvnw -q help:evaluate -Dexpression=project.version -DforceStdout)"
+          if [[ "$VERSION" == *-SNAPSHOT ]]; then
+            echo "::error::Cannot release snapshot version $VERSION"
+            exit 1
+          fi
+          if [[ "$RELEASE_TAG" != "v$VERSION" ]]; then
+            echo "::error::Release tag $RELEASE_TAG must match project version v$VERSION"
+            exit 1
+          fi
+
+  build:
+    needs: validate
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ github.event.release.tag_name }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives-macos-arm64
+          path: natives/src/main/resources/libvips-natives/macos-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives-windows-x64
+          path: natives/src/main/resources/libvips-natives/windows-x64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: natives-linux-x64
+          path: natives/src/main/resources/libvips-natives/linux-x64/
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 26
+          cache: maven
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+      - name: Deploy to Maven Central
+        run: >-
+          ./mvnw -B clean deploy -P release,all-natives
+          -Dnative.classifier=macos-arm64 -DskipTests
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "libvips-ffm-native-dependencies",
+  "version-string": "8.18.3",
+  "builtin-baseline": "3c5d90a305ff00ca841f085a74a7ce74ee777dee",
+  "dependencies": [
+    {
+      "name": "cairo",
+      "default-features": false,
+      "features": ["fontconfig", "freetype", "gobject"]
+    },
+    "expat",
+    "fontconfig",
+    "freetype",
+    "fribidi",
+    "glib",
+    "harfbuzz",
+    "highway",
+    "lcms",
+    {
+      "name": "libarchive",
+      "default-features": false
+    },
+    "libexif",
+    {
+      "name": "libheif",
+      "default-features": false,
+      "features": ["dav1d"]
+    },
+    "libjpeg-turbo",
+    "libjxl",
+    "libpng",
+    "libxml2",
+    {
+      "name": "libwebp",
+      "default-features": false,
+      "features": ["libwebpmux", "nearlossless"]
+    },
+    "openjpeg",
+    "pango",
+    {
+      "name": "tiff",
+      "default-features": false,
+      "features": ["jpeg", "zip"]
+    }
+  ]
+}
