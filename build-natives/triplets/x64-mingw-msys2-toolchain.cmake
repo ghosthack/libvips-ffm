@@ -17,8 +17,8 @@ set(ENV{PATH} "$ENV{LIBVIPS_FFM_MINGW_BIN};$ENV{PATH}")
 set(LIBVIPS_FFM_MINGW_BIN "$ENV{LIBVIPS_FFM_MINGW_BIN}")
 
 set(CMAKE_C_COMPILER
-    "${LIBVIPS_FFM_MINGW_BIN}/x86_64-w64-mingw32-gcc.exe")
+    "${CMAKE_CURRENT_LIST_DIR}/mingw-gcc.cmd")
 set(CMAKE_CXX_COMPILER
-    "${LIBVIPS_FFM_MINGW_BIN}/x86_64-w64-mingw32-g++.exe")
+    "${CMAKE_CURRENT_LIST_DIR}/mingw-gxx.cmd")
 set(CMAKE_RC_COMPILER
-    "${LIBVIPS_FFM_MINGW_BIN}/windres.exe")
+    "${CMAKE_CURRENT_LIST_DIR}/mingw-windres.cmd")
