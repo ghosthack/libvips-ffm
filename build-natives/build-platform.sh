@@ -238,15 +238,17 @@ rustc --version | grep -Fq "rustc $RUST_VERSION " ||
 
 if ! command -v cargo-cbuild >/dev/null 2>&1; then
   if [ "$PLATFORM" = windows-x64 ]; then
-    # cargo.exe is a native Windows process. Give its cc-rs compiler children
-    # a native PATH so MinGW's runtime DLLs remain visible when gcc.exe starts.
-    # Keep this local to the bootstrap; Meson and the remaining shell commands
-    # still require the POSIX PATH assembled above.
-    RUST_CARGO_HOME_MIXED="$(cygpath -m "$RUST_CARGO_HOME")"
-    RUST_TOOLCHAIN_BIN_MIXED="$(cygpath -m "$RUST_TOOLCHAIN_BIN")"
-    CARGO_NATIVE_PATH="$RUST_CARGO_HOME_MIXED/bin;$RUST_TOOLCHAIN_BIN_MIXED;$LIBVIPS_FFM_MINGW_BIN;C:\\Windows\\System32;C:\\Windows"
-    PATH="$CARGO_NATIVE_PATH" "$RUST_CARGO_HOME/bin/cargo.exe" \
-      install cargo-c --version "$CARGO_C_VERSION" --locked
+    # The upstream pinned release provides a self-contained Windows-GNU build.
+    # cargo-c is a build-time tool only; using this checksummed executable also
+    # avoids native Cargo losing MSYS2 compiler state across CreateProcess.
+    CARGO_C_ARCHIVE="$BUILD_ROOT/downloads/cargo-c-windows-gnu.zip"
+    mkdir -p "$BUILD_ROOT/downloads" "$RUST_CARGO_HOME/bin"
+    if [ ! -f "$CARGO_C_ARCHIVE" ]; then
+      curl --fail --location --retry 3 "$CARGO_C_WINDOWS_GNU_URL" \
+        --output "$CARGO_C_ARCHIVE"
+    fi
+    verify_sha256 "$CARGO_C_WINDOWS_GNU_SHA256" "$CARGO_C_ARCHIVE"
+    unzip -j -o "$CARGO_C_ARCHIVE" '*.exe' -d "$RUST_CARGO_HOME/bin"
   else
     cargo install cargo-c --version "$CARGO_C_VERSION" --locked
   fi
