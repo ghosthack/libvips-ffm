@@ -70,10 +70,19 @@ case "$PLATFORM" in
       GIT_BIN_DIR='/c/Program Files/Git/cmd'
     fi
     export PATH="$RUST_BIN_DIR:$GIT_BIN_DIR:/mingw64/bin:/usr/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/WindowsPowerShell/v1.0"
-    # vcpkg.exe launches native Windows CMake, which cannot reliably discover
-    # an MSYS2 compiler from the POSIX-form PATH inherited through ssh.
-    export CC='C:/msys64/mingw64/bin/gcc.exe'
-    export CXX='C:/msys64/mingw64/bin/g++.exe'
+    # setup-msys2 may install under any runner drive. Discover the compiler
+    # from the active shell, then also expose its native path to vcpkg.exe and
+    # the compiler wrapper scripts used by native Windows CMake/Ninja.
+    MINGW_GCC_PATH="$(command -v x86_64-w64-mingw32-gcc || true)"
+    if [ -z "$MINGW_GCC_PATH" ]; then
+      echo "x86_64-w64-mingw32-gcc is required for windows-x64" >&2
+      exit 1
+    fi
+    MINGW_BIN_POSIX="${MINGW_GCC_PATH%/*}"
+    MINGW_BIN_WINDOWS="$(cygpath -w "$MINGW_BIN_POSIX")"
+    export LIBVIPS_FFM_MINGW_BIN="$MINGW_BIN_WINDOWS"
+    export CC="$MINGW_BIN_POSIX/gcc.exe"
+    export CXX="$MINGW_BIN_POSIX/g++.exe"
     ;;
   *)
     echo "unsupported platform: $PLATFORM" >&2
@@ -176,7 +185,7 @@ if [ "$PLATFORM" = windows-x64 ]; then
   # Keeping a POSIX PATH here lets compiler detection succeed but causes the
   # parallel compile processes to exit silently when their runtime DLLs cannot
   # be found.
-  VCPKG_WINDOWS_PATH='C:\msys64\mingw64\bin;C:\Program Files\Git\cmd;C:\Windows\System32;C:\Windows'
+  VCPKG_WINDOWS_PATH="$LIBVIPS_FFM_MINGW_BIN;C:\\Program Files\\Git\\cmd;C:\\Windows\\System32;C:\\Windows"
   PATH="$VCPKG_WINDOWS_PATH" "$VCPKG" "${VCPKG_INSTALL_ARGS[@]}"
 else
   "$VCPKG" "${VCPKG_INSTALL_ARGS[@]}"
