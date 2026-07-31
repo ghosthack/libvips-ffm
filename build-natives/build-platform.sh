@@ -140,7 +140,11 @@ if [ ! -d "$VCPKG_ROOT/.git" ]; then
 fi
 git -C "$VCPKG_ROOT" fetch --depth 1 origin "$VCPKG_COMMIT"
 git -C "$VCPKG_ROOT" checkout --detach "$VCPKG_COMMIT"
-git -C "$VCPKG_ROOT" checkout -- \
+# Git for Windows defaults to CRLF checkout. Keep the reviewed overlay patch
+# byte-compatible across hosts before restoring the two files it modifies.
+git -C "$VCPKG_ROOT" config core.autocrlf false
+git -C "$VCPKG_ROOT" config core.eol lf
+git -C "$VCPKG_ROOT" checkout --force "$VCPKG_COMMIT" -- \
   ports/libheif/portfile.cmake ports/libheif/vcpkg.json
 git -C "$VCPKG_ROOT" apply \
   "$ROOT/build-natives/vcpkg/libheif-dav1d.patch"
