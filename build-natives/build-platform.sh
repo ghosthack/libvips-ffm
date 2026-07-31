@@ -79,10 +79,12 @@ case "$PLATFORM" in
       exit 1
     fi
     MINGW_BIN_POSIX="${MINGW_GCC_PATH%/*}"
-    MINGW_BIN_WINDOWS="$(cygpath -w "$MINGW_BIN_POSIX")"
-    export LIBVIPS_FFM_MINGW_BIN="$MINGW_BIN_WINDOWS"
-    export CC="$MINGW_BIN_POSIX/gcc.exe"
-    export CXX="$MINGW_BIN_POSIX/g++.exe"
+    MINGW_BIN_MIXED="$(cygpath -m "$MINGW_BIN_POSIX")"
+    export LIBVIPS_FFM_MINGW_BIN="$MINGW_BIN_MIXED"
+    # These variables also reach native Windows CMake processes, so use paths
+    # understood on both sides of the MSYS2 process boundary.
+    export CC="$MINGW_BIN_MIXED/gcc.exe"
+    export CXX="$MINGW_BIN_MIXED/g++.exe"
     ;;
   *)
     echo "unsupported platform: $PLATFORM" >&2
@@ -186,7 +188,18 @@ if [ "$PLATFORM" = windows-x64 ]; then
   # parallel compile processes to exit silently when their runtime DLLs cannot
   # be found.
   VCPKG_WINDOWS_PATH="$LIBVIPS_FFM_MINGW_BIN;C:\\Program Files\\Git\\cmd;C:\\Windows\\System32;C:\\Windows"
-  PATH="$VCPKG_WINDOWS_PATH" "$VCPKG" "${VCPKG_INSTALL_ARGS[@]}"
+  if ! PATH="$VCPKG_WINDOWS_PATH" "$VCPKG" "${VCPKG_INSTALL_ARGS[@]}"; then
+    # vcpkg reports compiler-detection failures only by naming its private
+    # logs. Surface the relevant files in hosted CI so failures are actionable.
+    for log in \
+      "$VCPKG_ROOT"/buildtrees/detect_compiler/config-x64-mingw-dynamic-*.log; do
+      if [ -f "$log" ]; then
+        echo "===== $log =====" >&2
+        sed -n '1,240p' "$log" >&2
+      fi
+    done
+    exit 1
+  fi
 else
   "$VCPKG" "${VCPKG_INSTALL_ARGS[@]}"
 fi

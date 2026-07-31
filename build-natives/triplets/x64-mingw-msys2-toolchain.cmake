@@ -14,10 +14,11 @@ endif()
 # native CMake/Ninja processes do not consistently inherit MSYS2's converted
 # PATH when the build is launched through Windows OpenSSH.
 set(ENV{PATH} "$ENV{LIBVIPS_FFM_MINGW_BIN};$ENV{PATH}")
+set(LIBVIPS_FFM_MINGW_BIN "$ENV{LIBVIPS_FFM_MINGW_BIN}")
 
 set(CMAKE_C_COMPILER
-    "${CMAKE_CURRENT_LIST_DIR}/mingw-gcc.cmd")
+    "${LIBVIPS_FFM_MINGW_BIN}/x86_64-w64-mingw32-gcc.exe")
 set(CMAKE_CXX_COMPILER
-    "${CMAKE_CURRENT_LIST_DIR}/mingw-gxx.cmd")
+    "${LIBVIPS_FFM_MINGW_BIN}/x86_64-w64-mingw32-g++.exe")
 set(CMAKE_RC_COMPILER
-    "${CMAKE_CURRENT_LIST_DIR}/mingw-windres.cmd")
+    "${LIBVIPS_FFM_MINGW_BIN}/windres.exe")
