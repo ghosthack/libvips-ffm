@@ -65,6 +65,18 @@ case "$PLATFORM" in
     TRIPLET=x64-mingw-dynamic
     RUST_TOOLCHAIN="$RUST_VERSION-x86_64-pc-windows-gnu"
     JOBS="${NUMBER_OF_PROCESSORS:-4}"
+    # setup-msys2 does not retain the hosted runner's Cargo directory on PATH.
+    # Resolve it from the dynamic Windows profile instead of assuming a user.
+    if [ "$RUST_BIN_DIR" = /__libvips_ffm_missing_rustup__ ] &&
+       [ -n "${USERPROFILE:-}" ]; then
+      WINDOWS_USER_HOME="$(cygpath -u "$USERPROFILE")"
+      WINDOWS_CARGO_HOME="$WINDOWS_USER_HOME/.cargo"
+      if [ -x "$WINDOWS_CARGO_HOME/bin/rustup.exe" ]; then
+        RUST_CARGO_HOME="$WINDOWS_CARGO_HOME"
+        RUSTUP_PATH="$RUST_CARGO_HOME/bin/rustup.exe"
+        RUST_BIN_DIR="$RUST_CARGO_HOME/bin"
+      fi
+    fi
     if [ "$GIT_BIN_DIR" = /__libvips_ffm_missing_git__ ] &&
        [ -x '/c/Program Files/Git/cmd/git.exe' ]; then
       GIT_BIN_DIR='/c/Program Files/Git/cmd'
@@ -209,13 +221,13 @@ VCPKG_PREFIX="$VCPKG_INSTALLED/$TRIPLET"
 # Bootstrap Rust build tools before adding target libraries to PATH and
 # PKG_CONFIG_PATH. Otherwise cargo-c itself can accidentally link against the
 # private runtime closure (and fail before that closure has been relocated).
-if ! command -v rustup >/dev/null 2>&1; then
+if [ -z "$RUSTUP_PATH" ] || [ ! -x "$RUSTUP_PATH" ]; then
   echo "rustup is required to select the pinned Rust $RUST_VERSION toolchain" >&2
   exit 1
 fi
-rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+"$RUSTUP_PATH" toolchain install "$RUST_TOOLCHAIN" --profile minimal
 export RUSTUP_TOOLCHAIN="$RUST_TOOLCHAIN"
-RUSTC_PATH="$(rustup which --toolchain "$RUST_TOOLCHAIN" rustc)"
+RUSTC_PATH="$("$RUSTUP_PATH" which --toolchain "$RUST_TOOLCHAIN" rustc)"
 if [ "$PLATFORM" = windows-x64 ]; then
   RUSTC_PATH="$(cygpath -u "$RUSTC_PATH")"
 fi
@@ -231,8 +243,8 @@ if ! cargo-cbuild --version | grep -Fq "$CARGO_C_VERSION"; then
   echo "cargo-c $CARGO_C_VERSION is required" >&2
   exit 1
 fi
-if [ "$PLATFORM" = windows-x64 ] && command -v rustup >/dev/null 2>&1; then
-  rustup target add x86_64-pc-windows-gnu
+if [ "$PLATFORM" = windows-x64 ]; then
+  "$RUSTUP_PATH" target add x86_64-pc-windows-gnu
 fi
 
 export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig:$VCPKG_PREFIX/lib/pkgconfig:$VCPKG_PREFIX/share/pkgconfig"
