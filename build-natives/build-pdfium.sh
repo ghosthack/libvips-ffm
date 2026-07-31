@@ -70,11 +70,20 @@ rm -f "$BUILDER/steps/02-checkout.sh.bak"
 (
   cd "$BUILDER"
   rm -rf staging
-  env \
-    DEPOT_TOOLS_WIN_TOOLCHAIN=0 \
-    PDFium_VERSION="$PDFIUM_VERSION" \
-    "${PDFIUM_PLATFORM_ENV[@]}" \
-    ./build.sh -b "$PDFIUM_BRANCH" "$PDFIUM_OS" "$PDFIUM_CPU"
+  if [ "${#PDFIUM_PLATFORM_ENV[@]}" -gt 0 ]; then
+    env \
+      DEPOT_TOOLS_WIN_TOOLCHAIN=0 \
+      PDFium_VERSION="$PDFIUM_VERSION" \
+      "${PDFIUM_PLATFORM_ENV[@]}" \
+      ./build.sh -b "$PDFIUM_BRANCH" "$PDFIUM_OS" "$PDFIUM_CPU"
+  else
+    # Bash 3.2 (still shipped by macOS) treats expansion of an empty array as
+    # an unbound variable under `set -u`, even when the array was initialized.
+    env \
+      DEPOT_TOOLS_WIN_TOOLCHAIN=0 \
+      PDFium_VERSION="$PDFIUM_VERSION" \
+      ./build.sh -b "$PDFIUM_BRANCH" "$PDFIUM_OS" "$PDFIUM_CPU"
+  fi
 )
 
 rm -rf "$OUTPUT"
