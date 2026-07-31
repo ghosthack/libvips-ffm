@@ -30,11 +30,17 @@ def members(archive: Path) -> list[str]:
     return [line for line in result.stdout.splitlines() if line]
 
 
+def member_basename(name: str) -> str:
+    """Return a basename for GNU ar members containing either path style."""
+    return name.replace("\\", "/").rsplit("/", 1)[-1]
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("usage: deduplicate-rust-archive.py ARCHIVE")
     archive = Path(sys.argv[1])
-    counts = Counter(members(archive))
+    archive_members = members(archive)
+    counts = Counter(member_basename(name) for name in archive_members)
     duplicates = {name for name, count in counts.items() if count > 1}
     if not duplicates:
         print(f"{archive.name} has already been deduplicated")
@@ -52,10 +58,21 @@ def main() -> None:
     # GNU ar's N modifier addresses a numbered occurrence. Keep the second
     # block: it owns additional, uniquely named import thunks later in the
     # archive which reference that block's header and trailer members.
-    for name in sorted(duplicates):
-        subprocess.run(["ar", "dN", "1", archive, name], check=True)
+    for basename in sorted(duplicates):
+        matching = [
+            name for name in archive_members if member_basename(name) == basename
+        ]
+        if matching[0] == matching[1]:
+            subprocess.run(
+                ["ar", "dN", "1", archive, matching[0]], check=True
+            )
+        else:
+            # Rust's MinGW archive builder can retain each import member's
+            # temporary-directory prefix. GNU ar's P modifier is required to
+            # select one full-path member without deleting its basename twin.
+            subprocess.run(["ar", "dP", archive, matching[0]], check=True)
 
-    remaining = Counter(members(archive))
+    remaining = Counter(member_basename(name) for name in members(archive))
     if any(count > 1 for count in remaining.values()):
         raise RuntimeError("duplicate members remain after archive repair")
     print(
