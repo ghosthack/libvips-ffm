@@ -355,16 +355,16 @@ LIBRSVG_OPTIONS=(
 if [ "$PLATFORM" = windows-x64 ]; then
   LIBRSVG_OPTIONS+=(
     -Dtriplet=x86_64-pc-windows-gnu
-    "-Dc_link_args=['-Wl,--strip-debug']"
+    "-Dc_link_args=['-Wl,--strip-debug','-Wl,--allow-multiple-definition']"
   )
 fi
 meson_configure "$LIBRSVG_SRC/build-$PLATFORM" "$LIBRSVG_SRC" "${LIBRSVG_OPTIONS[@]}"
 if [ "$PLATFORM" = windows-x64 ]; then
   # Rust 1.92's GNU staticlib contains two copies of a small set of kernel32
-  # import members. A whole-archive DLL link rejects them as duplicate symbols.
-  # Build the archive first and remove only that reviewed duplicate set.
+  # import members. Validate that exact reviewed set before the narrowly scoped
+  # allow-multiple-definition DLL link; external ar hangs on this large archive.
   meson compile -C "$LIBRSVG_SRC/build-$PLATFORM" librsvg-2
-  python3 "$ROOT/build-natives/deduplicate-rust-archive.py" \
+  python3 "$ROOT/build-natives/validate-rust-archive.py" \
     "$LIBRSVG_SRC/build-$PLATFORM/rsvg/liblibrsvg_c.a"
 fi
 meson compile -C "$LIBRSVG_SRC/build-$PLATFORM" -j "$JOBS"
