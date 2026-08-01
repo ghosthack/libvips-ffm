@@ -459,10 +459,14 @@ else
 fi
 meson install -C "$VIPS_SRC/build-$PLATFORM"
 
-HEIC_FIXTURE="$(find "$VCPKG_ROOT/buildtrees/libheif" \
-  -path '*/tests/data/rainbow-451x461.heic' -type f -print -quit)"
-[ -n "$HEIC_FIXTURE" ] ||
-  { echo "libheif HEIC release fixture was not found" >&2; exit 1; }
+HEIC_FIXTURE="$BUILD_ROOT/fixtures/rainbow-451x461.heic"
+HEIC_FIXTURE_URL=https://raw.githubusercontent.com/strukturag/libheif/2c4bbb54c2738d4a5efbbe3e5fa1d5d76bb88eb0/tests/data/rainbow-451x461.heic
+HEIC_FIXTURE_SHA256=4b2ce727f093944975f143ba2b39c4c64511b766d94552f8d51a755916e7f983
+mkdir -p "${HEIC_FIXTURE%/*}"
+curl --fail --location --retry 3 "$HEIC_FIXTURE_URL" \
+  --output "$HEIC_FIXTURE.download"
+verify_sha256 "$HEIC_FIXTURE_SHA256" "$HEIC_FIXTURE.download"
+mv "$HEIC_FIXTURE.download" "$HEIC_FIXTURE"
 HEIC_SMOKE_OUTPUT="$BUILD_ROOT/heic-smoke.png"
 case "$PLATFORM" in
   macos-arm64)
@@ -599,7 +603,7 @@ librsvg: $LIBRSVG_VERSION (Rust, cargo-c $CARGO_C_VERSION)
 rustc: $(rustc --version)
 cargo: $(cargo --version)
 cargo-c: $(cargo-cbuild --version)
-HEIC decode smoke: libheif rainbow-451x461.heic -> 451x461 PNG
+HEIC decode smoke: $HEIC_FIXTURE_URL -> 451x461 PNG
 AVIF decode smoke: libheif example.avif -> 800x533 PNG via dav1d
 Meson options: $RECORDED_VIPS_OPTIONS
 compiler: $(${CC:-cc} --version 2>/dev/null | head -1 || true)
