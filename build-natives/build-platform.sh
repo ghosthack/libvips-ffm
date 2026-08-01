@@ -459,6 +459,18 @@ else
 fi
 meson install -C "$VIPS_SRC/build-$PLATFORM"
 
+if [ "$PLATFORM" = windows-x64 ]; then
+  # MinGW-built C++ and Rust libraries depend on these toolchain runtimes.
+  # They are not vcpkg ports, so stage the exact DLLs used by this compiler
+  # before executing the freshly built runtime smoke tests.
+  for runtime in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
+    runtime_path="$MINGW_BIN_POSIX/$runtime"
+    [ -f "$runtime_path" ] ||
+      { echo "missing MinGW runtime $runtime" >&2; exit 1; }
+    cp "$runtime_path" "$PREFIX/bin/"
+  done
+fi
+
 HEIC_FIXTURE="$BUILD_ROOT/fixtures/rainbow-451x461.heic"
 HEIC_FIXTURE_URL=https://raw.githubusercontent.com/strukturag/libheif/2c4bbb54c2738d4a5efbbe3e5fa1d5d76bb88eb0/tests/data/rainbow-451x461.heic
 HEIC_FIXTURE_SHA256=4b2ce727f093944975f143ba2b39c4c64511b766d94552f8d51a755916e7f983
@@ -537,17 +549,6 @@ case "$PLATFORM" in
 esac
 rm -f "$AVIF_SMOKE_OUTPUT"
 echo "Decoded representative 800x533 AVIF fixture through libheif/dav1d"
-
-if [ "$PLATFORM" = windows-x64 ]; then
-  # MinGW-built C++ and Rust libraries depend on these toolchain runtimes.
-  # They are not vcpkg ports, so stage the exact DLLs used by this compiler.
-  for runtime in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
-    runtime_path="$MINGW_BIN_POSIX/$runtime"
-    [ -f "$runtime_path" ] ||
-      { echo "missing MinGW runtime $runtime" >&2; exit 1; }
-    cp "$runtime_path" "$PREFIX/bin/"
-  done
-fi
 
 rm -rf "$DEST"
 mkdir -p "$DEST"
