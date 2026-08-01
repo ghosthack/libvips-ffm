@@ -225,6 +225,12 @@ if [ "$PLATFORM" = windows-x64 ]; then
   # subprocesses always inherit the MinGW runtime DLL directory.
   export CC="$(cygpath -m "$TRIPLET_DIR/mingw-gcc.cmd")"
   export CXX="$(cygpath -m "$TRIPLET_DIR/mingw-gxx.cmd")"
+  # Meson's Windows ABI-stamp optimization scans every generated import
+  # library with nm. The hosted MinGW nm process can remain stuck indefinitely
+  # after a successful DLL link. Meson explicitly falls back to a dummy stamp
+  # when nm fails, which only means downstream targets relink after changes;
+  # it does not alter the DLL or its import library.
+  export NM="$(cygpath -m "$TRIPLET_DIR/meson-nm-disabled.cmd")"
 fi
 
 # Bootstrap Rust build tools before adding target libraries to PATH and
