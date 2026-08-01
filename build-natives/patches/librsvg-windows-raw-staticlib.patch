@@ -1,0 +1,34 @@
+diff --git a/librsvg-c/Cargo.toml b/librsvg-c/Cargo.toml
+index ebdb8f3..28cae5b 100644
+--- a/librsvg-c/Cargo.toml
++++ b/librsvg-c/Cargo.toml
+@@ -10,6 +10,9 @@ repository.workspace = true
+ edition.workspace = true
+ rust-version.workspace = true
+ 
++[lib]
++crate-type = ["staticlib"]
++
+ [dependencies]
+ cairo-rs = { workspace = true, features = ["v1_16", "png", "pdf", "ps", "svg"] }
+ cast.workspace = true
+diff --git a/rsvg/meson.build b/rsvg/meson.build
+index 54b2f36..3da2609 100644
+--- a/rsvg/meson.build
++++ b/rsvg/meson.build
+@@ -90,6 +90,6 @@ rust_artifacts = custom_target(
+   'librsvg-2',
+   build_by_default: true,
+-  output: '@0@rsvg_@1@.@2@'.format(lib_prefix, librsvg_api_major, ext_static),
++  output: '@0@rsvg_c.@1@'.format(lib_prefix, ext_static),
+   console: true,
+   depend_files: library_sources + librsvg_c_sources,
+   env: extra_env,
+@@ -97,7 +97,7 @@ rust_artifacts = custom_target(
+     cargo_wrapper,
+     cargo_wrapper_args,
+-    '--command=cbuild',
++    '--command=build',
+     '--current-build-dir', '@OUTDIR@',
+     '--current-source-dir', meson.current_source_dir(),
+     '--packages', 'librsvg-c',

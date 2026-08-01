@@ -319,6 +319,25 @@ VCPKG_CMAKE_ARGS=(
 )
 
 LIBRSVG_SRC="$(fetch_source "librsvg-$LIBRSVG_VERSION.tar.xz" "$LIBRSVG_URL" "$LIBRSVG_SHA256")"
+if [ "$PLATFORM" = windows-x64 ]; then
+  # cargo-c's Windows-GNU staticlib aggregation can leave GNU ar processing
+  # the already-built Rust archive indefinitely. Meson links the native
+  # dependencies itself, so use Cargo's raw staticlib and avoid that redundant
+  # aggregation step. Keep this as a reviewed, version-pinned source patch.
+  LIBRSVG_WINDOWS_PATCH="$ROOT/build-natives/patches/librsvg-windows-raw-staticlib.patch"
+  if patch --batch --forward --dry-run -p1 -d "$LIBRSVG_SRC" \
+      < "$LIBRSVG_WINDOWS_PATCH" >/dev/null; then
+    patch --batch --forward -p1 -d "$LIBRSVG_SRC" < "$LIBRSVG_WINDOWS_PATCH"
+  elif grep -Fqx 'crate-type = ["staticlib"]' "$LIBRSVG_SRC/librsvg-c/Cargo.toml" &&
+       grep -Fq "output: '@0@rsvg_c.@1@'.format(lib_prefix, ext_static)" \
+         "$LIBRSVG_SRC/rsvg/meson.build" &&
+       grep -Fq "'--command=build'" "$LIBRSVG_SRC/rsvg/meson.build"; then
+    echo "librsvg Windows raw-staticlib patch is already applied"
+  else
+    echo "librsvg Windows raw-staticlib patch does not apply cleanly" >&2
+    exit 1
+  fi
+fi
 LIBRSVG_OPTIONS=(
   --prefix="$PREFIX"
   --libdir=lib
@@ -346,7 +365,7 @@ if [ "$PLATFORM" = windows-x64 ]; then
   # Build the archive first and remove only that reviewed duplicate set.
   meson compile -C "$LIBRSVG_SRC/build-$PLATFORM" librsvg-2
   python3 "$ROOT/build-natives/deduplicate-rust-archive.py" \
-    "$LIBRSVG_SRC/build-$PLATFORM/rsvg/librsvg_2.a"
+    "$LIBRSVG_SRC/build-$PLATFORM/rsvg/librsvg_c.a"
 fi
 meson compile -C "$LIBRSVG_SRC/build-$PLATFORM" -j "$JOBS"
 meson install -C "$LIBRSVG_SRC/build-$PLATFORM"
