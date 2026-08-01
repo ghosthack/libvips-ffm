@@ -225,12 +225,6 @@ if [ "$PLATFORM" = windows-x64 ]; then
   # subprocesses always inherit the MinGW runtime DLL directory.
   export CC="$(cygpath -m "$TRIPLET_DIR/mingw-gcc.cmd")"
   export CXX="$(cygpath -m "$TRIPLET_DIR/mingw-gxx.cmd")"
-  # Meson's Windows ABI-stamp optimization scans every generated import
-  # library with nm. The hosted MinGW nm process can remain stuck indefinitely
-  # after a successful DLL link. Meson explicitly falls back to a dummy stamp
-  # when nm fails, which only means downstream targets relink after changes;
-  # it does not alter the DLL or its import library.
-  export NM="$(cygpath -m "$TRIPLET_DIR/meson-nm-disabled.cmd")"
 fi
 
 # Bootstrap Rust build tools before adding target libraries to PATH and
@@ -451,7 +445,18 @@ VIPS_OPTIONS=(
   -Dradiance=false
 )
 meson_configure "$VIPS_SRC/build-$PLATFORM" "$VIPS_SRC" "${VIPS_OPTIONS[@]}"
-meson compile -C "$VIPS_SRC/build-$PLATFORM" -j "$JOBS"
+if [ "$PLATFORM" = windows-x64 ]; then
+  # Meson's Windows ABI-stamp optimization scans every generated import
+  # library with nm. The hosted MinGW nm process can remain stuck indefinitely
+  # after a successful DLL link. Meson explicitly falls back to a dummy stamp
+  # when nm fails, which only means downstream targets relink after changes;
+  # it does not alter the DLL or its import library. Limit the override to this
+  # compile so librsvg's required export-definition generator keeps real nm.
+  NM="$(cygpath -m "$TRIPLET_DIR/meson-nm-disabled.cmd")" \
+    meson compile -C "$VIPS_SRC/build-$PLATFORM" -j "$JOBS"
+else
+  meson compile -C "$VIPS_SRC/build-$PLATFORM" -j "$JOBS"
+fi
 meson install -C "$VIPS_SRC/build-$PLATFORM"
 
 HEIC_FIXTURE="$(find "$VCPKG_ROOT/buildtrees/libheif" \
