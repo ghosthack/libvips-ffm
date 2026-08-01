@@ -113,6 +113,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/vcpkg-binary-cache
           key: windows-vcpkg-${{ hashFiles('build-natives/versions.env', 'build-natives/vcpkg/**', 'build-natives/triplets/**') }}
+          save-always: true
       - name: Build PDFium from source
         run: ./build-natives/build-pdfium.sh windows-x64
         shell: bash
