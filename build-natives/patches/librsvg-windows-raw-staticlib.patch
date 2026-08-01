@@ -13,7 +13,7 @@ index 54b2f36..3da2609 100644
    'librsvg-2',
    build_by_default: true,
 -  output: '@0@rsvg_@1@.@2@'.format(lib_prefix, librsvg_api_major, ext_static),
-+  output: '@0@rsvg_c.@1@'.format(lib_prefix, ext_static),
++  output: '@0@librsvg_c.@1@'.format(lib_prefix, ext_static),
    console: true,
    depend_files: library_sources + librsvg_c_sources,
    env: extra_env,
