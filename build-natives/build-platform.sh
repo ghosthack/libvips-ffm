@@ -371,8 +371,15 @@ meson compile -C "$LIBRSVG_SRC/build-$PLATFORM" -j "$JOBS"
 meson install -C "$LIBRSVG_SRC/build-$PLATFORM"
 
 IMAGEQUANT_SRC="$(fetch_source "libimagequant-$IMAGEQUANT_VERSION.tar.gz" "$IMAGEQUANT_URL" "$IMAGEQUANT_SHA256")"
+IMAGEQUANT_LIBRARY_TYPE=shared
+if [ "$PLATFORM" = windows-x64 ]; then
+  # Meson's MinGW DLL import-library scan leaves nm running indefinitely for
+  # libimagequant. Embed this small dependency into libvips on Windows.
+  IMAGEQUANT_LIBRARY_TYPE=static
+fi
 meson_configure "$IMAGEQUANT_SRC/build-$PLATFORM" "$IMAGEQUANT_SRC" \
-  --prefix="$PREFIX" --libdir=lib --buildtype=release --default-library=shared
+  --prefix="$PREFIX" --libdir=lib --buildtype=release \
+  --default-library="$IMAGEQUANT_LIBRARY_TYPE"
 meson compile -C "$IMAGEQUANT_SRC/build-$PLATFORM" -j "$JOBS"
 meson install -C "$IMAGEQUANT_SRC/build-$PLATFORM"
 
