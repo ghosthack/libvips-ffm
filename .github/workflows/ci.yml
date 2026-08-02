@@ -109,11 +109,19 @@ jobs:
           cache_path="$(cygpath -m "$RUNNER_TEMP")/vcpkg-binary-cache"
           echo "VCPKG_DEFAULT_BINARY_CACHE=$cache_path" >> "$GITHUB_ENV"
           mkdir -p "$(cygpath -u "$cache_path")"
+      - name: Identify Windows runner image
+        id: windows_runner_image
+        run: |
+          test -n "${ImageVersion:-}"
+          echo "version=$ImageVersion" >> "$GITHUB_OUTPUT"
       - uses: actions/cache/restore@v4
         id: windows-vcpkg-cache
         with:
           path: ${{ runner.temp }}/vcpkg-binary-cache
-          key: windows-vcpkg-${{ hashFiles('build-natives/versions.env', 'build-natives/vcpkg/**', 'build-natives/triplets/**') }}
+          key: windows-vcpkg-${{ steps.windows_runner_image.outputs.version }}-${{ hashFiles('build-natives/versions.env', 'build-natives/vcpkg/**', 'build-natives/triplets/**') }}
+          restore-keys: |
+            windows-vcpkg-${{ steps.windows_runner_image.outputs.version }}-
+            windows-vcpkg-
       - name: Build PDFium from source
         run: ./build-natives/build-pdfium.sh windows-x64
         shell: bash
@@ -124,7 +132,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/vcpkg-binary-cache
-          key: windows-vcpkg-${{ hashFiles('build-natives/versions.env', 'build-natives/vcpkg/**', 'build-natives/triplets/**') }}
+          key: windows-vcpkg-${{ steps.windows_runner_image.outputs.version }}-${{ hashFiles('build-natives/versions.env', 'build-natives/vcpkg/**', 'build-natives/triplets/**') }}
       - name: Build and test
         run: ./mvnw -B clean verify
       - name: Verify JPMS consumer
