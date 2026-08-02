@@ -207,6 +207,45 @@ def linux_relocate(destination: Path) -> None:
             )
 
 
+def strip_runtime(platform: str, destination: Path) -> None:
+    if platform == "windows-x64":
+        candidates = ("x86_64-w64-mingw32-strip", "strip")
+    elif platform == "linux-x64":
+        candidates = ("strip",)
+    else:
+        return
+
+    strip_tool = next(
+        (resolved for name in candidates if (resolved := shutil.which(name))),
+        None,
+    )
+    if strip_tool is None:
+        raise RuntimeError(
+            f"no target strip tool found for {platform}: "
+            + ", ".join(candidates)
+        )
+
+    libraries = sorted(
+        path
+        for path in destination.iterdir()
+        if path.is_file() and is_library(platform, path)
+    )
+    before = sum(path.stat().st_size for path in libraries)
+    for library in libraries:
+        subprocess.run(
+            [strip_tool, "--strip-unneeded", str(library)], check=True
+        )
+    after = sum(path.stat().st_size for path in libraries)
+    if after > before:
+        raise RuntimeError(
+            f"stripping {platform} runtime grew from {before} to {after} bytes"
+        )
+    print(
+        f"Stripped {len(libraries)} {platform} libraries: "
+        f"{before} -> {after} bytes ({before - after} saved)"
+    )
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -252,7 +291,10 @@ def main() -> None:
         macos_relocate(destination)
     elif platform == "linux-x64":
         linux_relocate(destination)
-    elif platform != "windows-x64":
+        strip_runtime(platform, destination)
+    elif platform == "windows-x64":
+        strip_runtime(platform, destination)
+    else:
         raise RuntimeError(f"unsupported platform: {platform}")
 
     libraries = sorted(
