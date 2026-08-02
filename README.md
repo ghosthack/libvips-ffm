@@ -12,12 +12,12 @@ Use the Java API jar plus the native classifier for the deployment platform:
 <dependency>
   <groupId>io.github.ghosthack</groupId>
   <artifactId>libvips-ffm</artifactId>
-  <version>8.18.3-0.1.1</version>
+  <version>8.18.3-0.1.2</version>
 </dependency>
 <dependency>
   <groupId>io.github.ghosthack</groupId>
   <artifactId>libvips-ffm-natives</artifactId>
-  <version>8.18.3-0.1.1</version>
+  <version>8.18.3-0.1.2</version>
   <classifier>macos-arm64</classifier>
   <scope>runtime</scope>
 </dependency>

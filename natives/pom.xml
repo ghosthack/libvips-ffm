@@ -7,7 +7,7 @@
   <parent>
     <groupId>io.github.ghosthack</groupId>
     <artifactId>libvips-ffm-parent</artifactId>
-    <version>8.18.3-0.1.2-SNAPSHOT</version>
+    <version>8.18.3-0.1.2</version>
   </parent>
 
   <artifactId>libvips-ffm-natives</artifactId>
