@@ -56,6 +56,8 @@ set -- \
   --include-function vips_autorot \
   --include-function vips_cast \
   --include-function vips_colourspace \
+  --include-function vips_icc_import \
+  --include-function vips_icc_transform \
   --include-function vips_invert \
   --include-function vips_linear1 \
   --include-function vips_avg \

@@ -3171,6 +3171,153 @@ public class Vips extends Vips$shared {
         }
     }
 
+    /**
+     * Variadic invoker class for:
+     * {@snippet lang=c :
+     * extern int vips_icc_transform(VipsImage *in, VipsImage **out, const char *output_profile, ...)
+     * }
+     */
+    public static class vips_icc_transform {
+        private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
+                Vips.C_INT,
+                Vips.C_POINTER,
+                Vips.C_POINTER,
+                Vips.C_POINTER
+            );
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("vips_icc_transform");
+
+        private final MethodHandle handle;
+        private final FunctionDescriptor descriptor;
+        private final MethodHandle spreader;
+
+        private vips_icc_transform(MethodHandle handle, FunctionDescriptor descriptor, MethodHandle spreader) {
+            this.handle = handle;
+            this.descriptor = descriptor;
+            this.spreader = spreader;
+        }
+
+        /**
+         * Variadic invoker factory for:
+         * {@snippet lang=c :
+         * extern int vips_icc_transform(VipsImage *in, VipsImage **out, const char *output_profile, ...)
+         * }
+         */
+        public static vips_icc_transform makeInvoker(MemoryLayout... layouts) {
+            FunctionDescriptor desc$ = BASE_DESC.appendArgumentLayouts(layouts);
+            Linker.Option fva$ = Linker.Option.firstVariadicArg(BASE_DESC.argumentLayouts().size());
+            var mh$ = Linker.nativeLinker().downcallHandle(ADDR, desc$, fva$);
+            var spreader$ = mh$.asSpreader(Object[].class, layouts.length);
+            return new vips_icc_transform(mh$, desc$, spreader$);
+        }
+
+        /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
+         * {@return the specialized method handle}
+         */
+        public MethodHandle handle() {
+            return handle;
+        }
+
+        /**
+         * {@return the specialized descriptor}
+         */
+        public FunctionDescriptor descriptor() {
+            return descriptor;
+        }
+
+        public int apply(MemorySegment in, MemorySegment out, MemorySegment output_profile, Object... x3) {
+            try {
+                if (TRACE_DOWNCALLS) {
+                    traceDowncall("vips_icc_transform", in, out, output_profile, x3);
+                }
+                return (int) spreader.invokeExact(in, out, output_profile, x3);
+            } catch(IllegalArgumentException | ClassCastException ex$)  {
+                throw ex$; // rethrow IAE from passing wrong number/type of args
+            } catch (Throwable ex$) {
+               throw new AssertionError("should not reach here", ex$);
+            }
+        }
+    }
+
+    /**
+     * Variadic invoker class for:
+     * {@snippet lang=c :
+     * extern int vips_icc_import(VipsImage *in, VipsImage **out, ...)
+     * }
+     */
+    public static class vips_icc_import {
+        private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
+                Vips.C_INT,
+                Vips.C_POINTER,
+                Vips.C_POINTER
+            );
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("vips_icc_import");
+
+        private final MethodHandle handle;
+        private final FunctionDescriptor descriptor;
+        private final MethodHandle spreader;
+
+        private vips_icc_import(MethodHandle handle, FunctionDescriptor descriptor, MethodHandle spreader) {
+            this.handle = handle;
+            this.descriptor = descriptor;
+            this.spreader = spreader;
+        }
+
+        /**
+         * Variadic invoker factory for:
+         * {@snippet lang=c :
+         * extern int vips_icc_import(VipsImage *in, VipsImage **out, ...)
+         * }
+         */
+        public static vips_icc_import makeInvoker(MemoryLayout... layouts) {
+            FunctionDescriptor desc$ = BASE_DESC.appendArgumentLayouts(layouts);
+            Linker.Option fva$ = Linker.Option.firstVariadicArg(BASE_DESC.argumentLayouts().size());
+            var mh$ = Linker.nativeLinker().downcallHandle(ADDR, desc$, fva$);
+            var spreader$ = mh$.asSpreader(Object[].class, layouts.length);
+            return new vips_icc_import(mh$, desc$, spreader$);
+        }
+
+        /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
+         * {@return the specialized method handle}
+         */
+        public MethodHandle handle() {
+            return handle;
+        }
+
+        /**
+         * {@return the specialized descriptor}
+         */
+        public FunctionDescriptor descriptor() {
+            return descriptor;
+        }
+
+        public int apply(MemorySegment in, MemorySegment out, Object... x2) {
+            try {
+                if (TRACE_DOWNCALLS) {
+                    traceDowncall("vips_icc_import", in, out, x2);
+                }
+                return (int) spreader.invokeExact(in, out, x2);
+            } catch(IllegalArgumentException | ClassCastException ex$)  {
+                throw ex$; // rethrow IAE from passing wrong number/type of args
+            } catch (Throwable ex$) {
+               throw new AssertionError("should not reach here", ex$);
+            }
+        }
+    }
+
     private static class vips_init {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Vips.C_INT,

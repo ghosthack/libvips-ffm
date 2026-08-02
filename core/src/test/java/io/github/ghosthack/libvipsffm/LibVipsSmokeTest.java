@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -116,6 +117,14 @@ class LibVipsSmokeTest {
             unref(alpha);
             unref(joinedConst);
         }
+    }
+
+    @Test
+    void profileAwareColorBindingsAreCallable() {
+        assertTrue(LibVips.hasOperation("icc_import"));
+        assertTrue(LibVips.hasOperation("icc_transform"));
+        assertNotNull(Vips.vips_icc_import.makeInvoker(ValueLayout.ADDRESS));
+        assertNotNull(Vips.vips_icc_transform.makeInvoker(ValueLayout.ADDRESS));
     }
 
     @Test
