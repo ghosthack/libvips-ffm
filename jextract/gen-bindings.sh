@@ -34,6 +34,12 @@ set -- \
   --include-function vips_image_get_bands \
   --include-function vips_image_get_format \
   --include-function vips_image_get_interpretation \
+  --include-function vips_image_get_fields \
+  --include-function vips_image_get_typeof \
+  --include-function vips_image_get_as_string \
+  --include-function vips_image_get_blob \
+  --include-function vips_image_get_int \
+  --include-function vips_image_get_double \
   --include-function vips_image_hasalpha \
   --include-function vips_thumbnail \
   --include-function vips_thumbnail_buffer \
@@ -56,8 +62,10 @@ set -- \
   --include-function vips_cache_set_max \
   --include-function vips_cache_set_max_mem \
   --include-function vips_cache_set_max_files \
+  --include-function vips_blob_get_type \
   --include-function g_object_unref \
   --include-function g_free \
+  --include-function g_strfreev \
   --include-constant VIPS_DIRECTION_HORIZONTAL \
   --include-constant VIPS_DIRECTION_VERTICAL \
   --include-constant VIPS_ANGLE_D0 \

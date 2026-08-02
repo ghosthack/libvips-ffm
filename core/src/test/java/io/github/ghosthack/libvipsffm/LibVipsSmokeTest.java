@@ -7,6 +7,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -114,6 +115,67 @@ class LibVipsSmokeTest {
             unref(joined);
             unref(alpha);
             unref(joinedConst);
+        }
+    }
+
+    @Test
+    void metadataBindingsAreCallable() {
+        byte[] encoded = Base64.getDecoder().decode(TINY_AVIF);
+        try (VipsImage image = VipsImage.fromBytes(encoded);
+             Arena arena = Arena.ofConfined()) {
+            MemorySegment fields = Vips.vips_image_get_fields(image.address());
+            assertTrue(fields.address() != 0);
+            Set<String> names = new HashSet<>();
+            try {
+                MemorySegment entries = fields.reinterpret(
+                        256L * ValueLayout.ADDRESS.byteSize());
+                for (long index = 0; index < 256; index++) {
+                    MemorySegment field = entries.getAtIndex(
+                            ValueLayout.ADDRESS, index);
+                    if (field.address() == 0) {
+                        break;
+                    }
+                    names.add(field.reinterpret(1024).getString(0));
+                }
+            } finally {
+                Vips.g_strfreev(fields);
+            }
+            assertTrue(names.containsAll(Set.of("width", "xres", "exif-data")));
+
+            MemorySegment width = arena.allocateFrom("width");
+            MemorySegment xres = arena.allocateFrom("xres");
+            MemorySegment exifData = arena.allocateFrom("exif-data");
+            assertTrue(Vips.vips_image_get_typeof(image.address(), width) != 0);
+            assertEquals(Vips.vips_blob_get_type(),
+                    Vips.vips_image_get_typeof(image.address(), exifData));
+
+            MemorySegment stringOut = arena.allocate(ValueLayout.ADDRESS);
+            assertEquals(0, Vips.vips_image_get_as_string(
+                    image.address(), width, stringOut));
+            MemorySegment string = stringOut.get(ValueLayout.ADDRESS, 0);
+            assertTrue(string.address() != 0);
+            try {
+                assertEquals("4", string.reinterpret(64).getString(0));
+            } finally {
+                Vips.g_free(string);
+            }
+
+            MemorySegment intOut = arena.allocate(ValueLayout.JAVA_INT);
+            assertEquals(0, Vips.vips_image_get_int(
+                    image.address(), width, intOut));
+            assertEquals(4, intOut.get(ValueLayout.JAVA_INT, 0));
+
+            MemorySegment doubleOut = arena.allocate(ValueLayout.JAVA_DOUBLE);
+            assertEquals(0, Vips.vips_image_get_double(
+                    image.address(), xres, doubleOut));
+            assertTrue(doubleOut.get(ValueLayout.JAVA_DOUBLE, 0) > 0.0);
+
+            MemorySegment blobOut = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment lengthOut = arena.allocate(ValueLayout.JAVA_LONG);
+            assertEquals(0, Vips.vips_image_get_blob(
+                    image.address(), exifData, blobOut, lengthOut));
+            assertTrue(blobOut.get(ValueLayout.ADDRESS, 0).address() != 0);
+            assertTrue(lengthOut.get(ValueLayout.JAVA_LONG, 0) > 0);
         }
     }
 
