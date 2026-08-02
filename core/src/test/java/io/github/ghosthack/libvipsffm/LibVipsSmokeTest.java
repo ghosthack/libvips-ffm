@@ -3,6 +3,9 @@ package io.github.ghosthack.libvipsffm;
 import io.github.ghosthack.libvipsffm.libvips.Vips;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.Base64;
 import java.util.Set;
 
@@ -63,6 +66,54 @@ class LibVipsSmokeTest {
         try (VipsImage decoded = VipsImage.fromBytes(png)) {
             assertEquals(16, decoded.width());
             assertEquals(12, decoded.height());
+        }
+    }
+
+    @Test
+    void additionalPixelPipelineBindingsAreCallable() {
+        var extractBand = Vips.vips_extract_band.makeInvoker(ValueLayout.ADDRESS);
+        var bandjoin = Vips.vips_bandjoin.makeInvoker(ValueLayout.ADDRESS);
+        var bandjoinConst1 = Vips.vips_bandjoin_const1.makeInvoker(ValueLayout.ADDRESS);
+        var unpremultiply = Vips.vips_unpremultiply.makeInvoker(ValueLayout.ADDRESS);
+
+        MemorySegment joinedConst = MemorySegment.NULL;
+        MemorySegment alpha = MemorySegment.NULL;
+        MemorySegment joined = MemorySegment.NULL;
+        MemorySegment unpremultiplied = MemorySegment.NULL;
+        try (VipsImage source = VipsImage.fromPixels(
+                     rgbPixels(8, 6), 8, 6, 3, Vips.VIPS_FORMAT_UCHAR());
+             Arena arena = Arena.ofConfined()) {
+            assertEquals(0, Vips.vips_image_hasalpha(source.address()));
+
+            MemorySegment output = arena.allocate(ValueLayout.ADDRESS);
+            assertEquals(0, bandjoinConst1.apply(
+                    source.address(), output, 255.0, MemorySegment.NULL));
+            joinedConst = output.get(ValueLayout.ADDRESS, 0);
+            assertEquals(4, Vips.vips_image_get_bands(joinedConst));
+            assertEquals(1, Vips.vips_image_hasalpha(joinedConst));
+
+            assertEquals(0, extractBand.apply(
+                    joinedConst, output, 3, MemorySegment.NULL));
+            alpha = output.get(ValueLayout.ADDRESS, 0);
+            assertEquals(1, Vips.vips_image_get_bands(alpha));
+
+            MemorySegment inputs = arena.allocate(ValueLayout.ADDRESS, 2);
+            inputs.setAtIndex(ValueLayout.ADDRESS, 0, source.address());
+            inputs.setAtIndex(ValueLayout.ADDRESS, 1, alpha);
+            assertEquals(0, bandjoin.apply(
+                    inputs, output, 2, MemorySegment.NULL));
+            joined = output.get(ValueLayout.ADDRESS, 0);
+            assertEquals(4, Vips.vips_image_get_bands(joined));
+
+            assertEquals(0, unpremultiply.apply(
+                    joined, output, MemorySegment.NULL));
+            unpremultiplied = output.get(ValueLayout.ADDRESS, 0);
+            assertEquals(4, Vips.vips_image_get_bands(unpremultiplied));
+        } finally {
+            unref(unpremultiplied);
+            unref(joined);
+            unref(alpha);
+            unref(joinedConst);
         }
     }
 
@@ -129,6 +180,12 @@ class LibVipsSmokeTest {
         try (VipsImage decoded = VipsImage.fromBytes(encoded)) {
             assertEquals(width, decoded.width());
             assertEquals(height, decoded.height());
+        }
+    }
+
+    private static void unref(MemorySegment image) {
+        if (image.address() != 0) {
+            Vips.g_object_unref(image);
         }
     }
 

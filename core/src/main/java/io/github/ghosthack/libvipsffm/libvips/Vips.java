@@ -642,6 +642,66 @@ public class Vips extends Vips$shared {
         }
     }
 
+    private static class vips_image_hasalpha {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            Vips.C_INT,
+            Vips.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("vips_image_hasalpha");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * extern gboolean vips_image_hasalpha(VipsImage *image)
+     * }
+     */
+    public static FunctionDescriptor vips_image_hasalpha$descriptor() {
+        return vips_image_hasalpha.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * extern gboolean vips_image_hasalpha(VipsImage *image)
+     * }
+     */
+    public static MethodHandle vips_image_hasalpha$handle() {
+        return vips_image_hasalpha.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * extern gboolean vips_image_hasalpha(VipsImage *image)
+     * }
+     */
+    public static MemorySegment vips_image_hasalpha$address() {
+        return vips_image_hasalpha.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * extern gboolean vips_image_hasalpha(VipsImage *image)
+     * }
+     */
+    public static int vips_image_hasalpha(MemorySegment image) {
+        var mh$ = vips_image_hasalpha.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("vips_image_hasalpha", image);
+            }
+            return (int)mh$.invokeExact(image);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class vips_error_buffer {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             Vips.C_POINTER    );
@@ -1740,6 +1800,80 @@ public class Vips extends Vips$shared {
     /**
      * Variadic invoker class for:
      * {@snippet lang=c :
+     * extern int vips_extract_band(VipsImage *in, VipsImage **out, int band, ...)
+     * }
+     */
+    public static class vips_extract_band {
+        private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
+                Vips.C_INT,
+                Vips.C_POINTER,
+                Vips.C_POINTER,
+                Vips.C_INT
+            );
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("vips_extract_band");
+
+        private final MethodHandle handle;
+        private final FunctionDescriptor descriptor;
+        private final MethodHandle spreader;
+
+        private vips_extract_band(MethodHandle handle, FunctionDescriptor descriptor, MethodHandle spreader) {
+            this.handle = handle;
+            this.descriptor = descriptor;
+            this.spreader = spreader;
+        }
+
+        /**
+         * Variadic invoker factory for:
+         * {@snippet lang=c :
+         * extern int vips_extract_band(VipsImage *in, VipsImage **out, int band, ...)
+         * }
+         */
+        public static vips_extract_band makeInvoker(MemoryLayout... layouts) {
+            FunctionDescriptor desc$ = BASE_DESC.appendArgumentLayouts(layouts);
+            Linker.Option fva$ = Linker.Option.firstVariadicArg(BASE_DESC.argumentLayouts().size());
+            var mh$ = Linker.nativeLinker().downcallHandle(ADDR, desc$, fva$);
+            var spreader$ = mh$.asSpreader(Object[].class, layouts.length);
+            return new vips_extract_band(mh$, desc$, spreader$);
+        }
+
+        /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
+         * {@return the specialized method handle}
+         */
+        public MethodHandle handle() {
+            return handle;
+        }
+
+        /**
+         * {@return the specialized descriptor}
+         */
+        public FunctionDescriptor descriptor() {
+            return descriptor;
+        }
+
+        public int apply(MemorySegment in, MemorySegment out, int band, Object... x3) {
+            try {
+                if (TRACE_DOWNCALLS) {
+                    traceDowncall("vips_extract_band", in, out, band, x3);
+                }
+                return (int) spreader.invokeExact(in, out, band, x3);
+            } catch(IllegalArgumentException | ClassCastException ex$)  {
+                throw ex$; // rethrow IAE from passing wrong number/type of args
+            } catch (Throwable ex$) {
+               throw new AssertionError("should not reach here", ex$);
+            }
+        }
+    }
+
+    /**
+     * Variadic invoker class for:
+     * {@snippet lang=c :
      * extern int vips_rot(VipsImage *in, VipsImage **out, VipsAngle angle, ...)
      * }
      */
@@ -1950,6 +2084,227 @@ public class Vips extends Vips$shared {
                     traceDowncall("vips_cast", in, out, format, x3);
                 }
                 return (int) spreader.invokeExact(in, out, format, x3);
+            } catch(IllegalArgumentException | ClassCastException ex$)  {
+                throw ex$; // rethrow IAE from passing wrong number/type of args
+            } catch (Throwable ex$) {
+               throw new AssertionError("should not reach here", ex$);
+            }
+        }
+    }
+
+    /**
+     * Variadic invoker class for:
+     * {@snippet lang=c :
+     * extern int vips_bandjoin(VipsImage **in, VipsImage **out, int n, ...)
+     * }
+     */
+    public static class vips_bandjoin {
+        private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
+                Vips.C_INT,
+                Vips.C_POINTER,
+                Vips.C_POINTER,
+                Vips.C_INT
+            );
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("vips_bandjoin");
+
+        private final MethodHandle handle;
+        private final FunctionDescriptor descriptor;
+        private final MethodHandle spreader;
+
+        private vips_bandjoin(MethodHandle handle, FunctionDescriptor descriptor, MethodHandle spreader) {
+            this.handle = handle;
+            this.descriptor = descriptor;
+            this.spreader = spreader;
+        }
+
+        /**
+         * Variadic invoker factory for:
+         * {@snippet lang=c :
+         * extern int vips_bandjoin(VipsImage **in, VipsImage **out, int n, ...)
+         * }
+         */
+        public static vips_bandjoin makeInvoker(MemoryLayout... layouts) {
+            FunctionDescriptor desc$ = BASE_DESC.appendArgumentLayouts(layouts);
+            Linker.Option fva$ = Linker.Option.firstVariadicArg(BASE_DESC.argumentLayouts().size());
+            var mh$ = Linker.nativeLinker().downcallHandle(ADDR, desc$, fva$);
+            var spreader$ = mh$.asSpreader(Object[].class, layouts.length);
+            return new vips_bandjoin(mh$, desc$, spreader$);
+        }
+
+        /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
+         * {@return the specialized method handle}
+         */
+        public MethodHandle handle() {
+            return handle;
+        }
+
+        /**
+         * {@return the specialized descriptor}
+         */
+        public FunctionDescriptor descriptor() {
+            return descriptor;
+        }
+
+        public int apply(MemorySegment in, MemorySegment out, int n, Object... x3) {
+            try {
+                if (TRACE_DOWNCALLS) {
+                    traceDowncall("vips_bandjoin", in, out, n, x3);
+                }
+                return (int) spreader.invokeExact(in, out, n, x3);
+            } catch(IllegalArgumentException | ClassCastException ex$)  {
+                throw ex$; // rethrow IAE from passing wrong number/type of args
+            } catch (Throwable ex$) {
+               throw new AssertionError("should not reach here", ex$);
+            }
+        }
+    }
+
+    /**
+     * Variadic invoker class for:
+     * {@snippet lang=c :
+     * extern int vips_bandjoin_const1(VipsImage *in, VipsImage **out, double c, ...)
+     * }
+     */
+    public static class vips_bandjoin_const1 {
+        private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
+                Vips.C_INT,
+                Vips.C_POINTER,
+                Vips.C_POINTER,
+                Vips.C_DOUBLE
+            );
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("vips_bandjoin_const1");
+
+        private final MethodHandle handle;
+        private final FunctionDescriptor descriptor;
+        private final MethodHandle spreader;
+
+        private vips_bandjoin_const1(MethodHandle handle, FunctionDescriptor descriptor, MethodHandle spreader) {
+            this.handle = handle;
+            this.descriptor = descriptor;
+            this.spreader = spreader;
+        }
+
+        /**
+         * Variadic invoker factory for:
+         * {@snippet lang=c :
+         * extern int vips_bandjoin_const1(VipsImage *in, VipsImage **out, double c, ...)
+         * }
+         */
+        public static vips_bandjoin_const1 makeInvoker(MemoryLayout... layouts) {
+            FunctionDescriptor desc$ = BASE_DESC.appendArgumentLayouts(layouts);
+            Linker.Option fva$ = Linker.Option.firstVariadicArg(BASE_DESC.argumentLayouts().size());
+            var mh$ = Linker.nativeLinker().downcallHandle(ADDR, desc$, fva$);
+            var spreader$ = mh$.asSpreader(Object[].class, layouts.length);
+            return new vips_bandjoin_const1(mh$, desc$, spreader$);
+        }
+
+        /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
+         * {@return the specialized method handle}
+         */
+        public MethodHandle handle() {
+            return handle;
+        }
+
+        /**
+         * {@return the specialized descriptor}
+         */
+        public FunctionDescriptor descriptor() {
+            return descriptor;
+        }
+
+        public int apply(MemorySegment in, MemorySegment out, double c, Object... x3) {
+            try {
+                if (TRACE_DOWNCALLS) {
+                    traceDowncall("vips_bandjoin_const1", in, out, c, x3);
+                }
+                return (int) spreader.invokeExact(in, out, c, x3);
+            } catch(IllegalArgumentException | ClassCastException ex$)  {
+                throw ex$; // rethrow IAE from passing wrong number/type of args
+            } catch (Throwable ex$) {
+               throw new AssertionError("should not reach here", ex$);
+            }
+        }
+    }
+
+    /**
+     * Variadic invoker class for:
+     * {@snippet lang=c :
+     * extern int vips_unpremultiply(VipsImage *in, VipsImage **out, ...)
+     * }
+     */
+    public static class vips_unpremultiply {
+        private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
+                Vips.C_INT,
+                Vips.C_POINTER,
+                Vips.C_POINTER
+            );
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("vips_unpremultiply");
+
+        private final MethodHandle handle;
+        private final FunctionDescriptor descriptor;
+        private final MethodHandle spreader;
+
+        private vips_unpremultiply(MethodHandle handle, FunctionDescriptor descriptor, MethodHandle spreader) {
+            this.handle = handle;
+            this.descriptor = descriptor;
+            this.spreader = spreader;
+        }
+
+        /**
+         * Variadic invoker factory for:
+         * {@snippet lang=c :
+         * extern int vips_unpremultiply(VipsImage *in, VipsImage **out, ...)
+         * }
+         */
+        public static vips_unpremultiply makeInvoker(MemoryLayout... layouts) {
+            FunctionDescriptor desc$ = BASE_DESC.appendArgumentLayouts(layouts);
+            Linker.Option fva$ = Linker.Option.firstVariadicArg(BASE_DESC.argumentLayouts().size());
+            var mh$ = Linker.nativeLinker().downcallHandle(ADDR, desc$, fva$);
+            var spreader$ = mh$.asSpreader(Object[].class, layouts.length);
+            return new vips_unpremultiply(mh$, desc$, spreader$);
+        }
+
+        /**
+         * {@return the address}
+         */
+        public static MemorySegment address() {
+            return ADDR;
+        }
+
+        /**
+         * {@return the specialized method handle}
+         */
+        public MethodHandle handle() {
+            return handle;
+        }
+
+        /**
+         * {@return the specialized descriptor}
+         */
+        public FunctionDescriptor descriptor() {
+            return descriptor;
+        }
+
+        public int apply(MemorySegment in, MemorySegment out, Object... x2) {
+            try {
+                if (TRACE_DOWNCALLS) {
+                    traceDowncall("vips_unpremultiply", in, out, x2);
+                }
+                return (int) spreader.invokeExact(in, out, x2);
             } catch(IllegalArgumentException | ClassCastException ex$)  {
                 throw ex$; // rethrow IAE from passing wrong number/type of args
             } catch (Throwable ex$) {

@@ -34,12 +34,17 @@ set -- \
   --include-function vips_image_get_bands \
   --include-function vips_image_get_format \
   --include-function vips_image_get_interpretation \
+  --include-function vips_image_hasalpha \
   --include-function vips_thumbnail \
   --include-function vips_thumbnail_buffer \
   --include-function vips_thumbnail_image \
   --include-function vips_resize \
   --include-function vips_crop \
   --include-function vips_extract_area \
+  --include-function vips_extract_band \
+  --include-function vips_bandjoin \
+  --include-function vips_bandjoin_const1 \
+  --include-function vips_unpremultiply \
   --include-function vips_flip \
   --include-function vips_rot \
   --include-function vips_autorot \
