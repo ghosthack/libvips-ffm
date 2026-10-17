@@ -17,7 +17,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -167,8 +166,7 @@ public final class LibVipsLibs {
                 }
             }
             if (platform.equals("windows-x64")) {
-                preloadWindowsDependencies(
-                        cacheDirectory, libraries, mainLibrary);
+                loadWindowsLibraries(cacheDirectory, libraries, mainLibrary);
             }
             return SymbolLookup.libraryLookup(
                     cacheDirectory.resolve(mainLibrary).toAbsolutePath(),
@@ -179,32 +177,47 @@ public final class LibVipsLibs {
         }
     }
 
-    private static void preloadWindowsDependencies(
+    /**
+     * Loads every bundled DLL, the main library last, with dependencies
+     * resolved from the bundle directory rather than {@code PATH} (see
+     * {@link WindowsDllLoader}). A failure names the DLL, the Windows error,
+     * and any bundled name already loaded in this process from elsewhere —
+     * the one conflict a search order cannot avoid.
+     */
+    private static void loadWindowsLibraries(
             Path directory, List<String> libraries, String mainLibrary) {
-        List<String> pending = new ArrayList<>(libraries);
-        pending.remove(mainLibrary);
-        UnsatisfiedLinkError lastFailure = null;
-        while (!pending.isEmpty()) {
-            int countBefore = pending.size();
-            for (Iterator<String> iterator = pending.iterator();
-                 iterator.hasNext(); ) {
-                String library = iterator.next();
-                try {
-                    System.load(directory.resolve(library)
-                            .toAbsolutePath().toString());
-                    iterator.remove();
-                } catch (UnsatisfiedLinkError e) {
-                    // A dependency later in the manifest may not be loaded yet.
-                    lastFailure = e;
-                }
+        WindowsDllLoader loader = new WindowsDllLoader();
+        List<String> order = new ArrayList<>(libraries);
+        order.remove(mainLibrary);
+        order.add(mainLibrary);
+        for (String library : order) {
+            Path dll = directory.resolve(library).toAbsolutePath();
+            int error = loader.load(dll);
+            if (error != 0) {
+                throw new IllegalStateException("cannot load bundled native " + library
+                        + " from " + directory + ": " + WindowsDllLoader.describe(error)
+                        + foreignModules(loader, directory, libraries));
             }
-            if (pending.size() == countBefore) {
-                throw new IllegalStateException(
-                        "cannot preload bundled Windows native dependencies: "
-                                + pending,
-                        lastFailure);
+            // Already loaded, so this resolves nothing new: it registers the
+            // DLL with the class loader, whose lookup supplies the symbols
+            // (g_object_unref, ...) that live outside the main library.
+            System.load(dll.toString());
+        }
+    }
+
+    private static String foreignModules(
+            WindowsDllLoader loader, Path directory, List<String> libraries) {
+        List<String> foreign = new ArrayList<>();
+        for (String library : libraries) {
+            Path loaded = loader.loadedPath(library);
+            if (loaded != null && !directory.toAbsolutePath().equals(
+                    loaded.toAbsolutePath().getParent())) {
+                foreign.add(library + " from " + loaded);
             }
         }
+        return foreign.isEmpty() ? ""
+                : "; already loaded in this process from elsewhere, and used in place of"
+                        + " the bundled copy: " + String.join(", ", foreign);
     }
 
     private static SymbolLookup fromSystem() {
